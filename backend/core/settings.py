@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'CustomUser',
     'rest_framework',
-    'rest_framework_simplejwt'
+    'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist'
 ]
 
 MIDDLEWARE = [
@@ -130,8 +131,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 ##additionals
 
 AUTH_USER_MODEL = 'CustomUser.User'
-AUTHENTICATION_BACKENDS = [
-    'CustomUser.backends.customAuth',
+AUTHENTICATION_BACKENDS= [
+    'CustomUser.backends.EmailBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
 REST_FRAMEWORK = {
