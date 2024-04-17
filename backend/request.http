@@ -1,0 +1,9 @@
+POST http://127.0.0.1:8000/api/users/login/ HTTP/1.1
+
+{
+  "email": "benup11@gmail.com",
+  "password": "string"
+}
+###
+GET http://127.0.0.1:8000/api/users/check/ HTTP/1.1
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzEzMzM0MjM1LCJpYXQiOjE3MTMzMzI0MzUsImp0aSI6IjMyMmE2MjViMDEyODQxZGZiMjkxMmFkN2U3NjAwNzAxIiwidXNlcl9pZCI6MTR9.vY8ZWsFYHaI-ezlBbQoeEnhNJhpwCuwwYz_0_1WLSLc
