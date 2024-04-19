@@ -1,8 +1,12 @@
 POST http://127.0.0.1:8000/api/users/login/ HTTP/1.1
 
+# {
+#   "email": "benup11@gmail.com",
+#   "password": "string"
+# }
 {
-  "email": "benup11@gmail.com",
-  "password": "string"
+  "email": 1,
+  "password": 1
 }
 ###
 GET http://127.0.0.1:8000/api/users/check/ HTTP/1.1

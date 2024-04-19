@@ -15,19 +15,14 @@ class RegisterIn(Schema):
     last_name:str|None=None
     phone_number:str|None=None
     address:str|None=None
-class RegisterOut(Schema):
-    email:str
-    first_name:str|None=None
-    last_name:str|None=None
-    phone_number:str|None=None
-    address:str|None=None
+
 
 class LoginIn(Schema):
     email:str
     password:str
 
 @router.post('register/')
-def add(request,data:RegisterIn):
+def registerUser(request,data:RegisterIn):
     if User.objects.filter(email=data.email).exists():
         return {"message": "Username already exists"}
     user = User.objects.create_user(email=data.email,
@@ -62,7 +57,7 @@ def get_tokens_for_user(user):
         "access": str(refresh.access_token),
     }
 @router.post('login/')
-def add(request,logindata:LoginIn):
+def loginUser(request,logindata:LoginIn):
     user=authenticate(email=logindata.email,password=logindata.password)
     if user is not None:
         return get_tokens_for_user(user)
