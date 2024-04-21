@@ -4,6 +4,8 @@ from django.contrib.auth.models import UserManager,AbstractBaseUser,PermissionsM
 from django.utils import timezone
 from django.core.validators import RegexValidator
 from django.core.mail import send_mail
+import uuid
+from datetime import timedelta
 
 class CustomUserManager(UserManager):
 
@@ -68,3 +70,14 @@ class User(AbstractBaseUser,PermissionsMixin):
     def email_user(self, subject, message, from_email=None, **kwargs):
         """Send an email to this user."""
         send_mail(subject, message, from_email, [self.email], **kwargs)
+
+class EmailConfirm(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    time_valid = models.DateTimeField(default=timezone.now() + timedelta(minutes=30))
+
+    def __str__(self):
+        return str(self.user.get_full_name())
+    class Meta:
+        verbose_name='Email Verification'
+        verbose_name_plural='Email Verifications'

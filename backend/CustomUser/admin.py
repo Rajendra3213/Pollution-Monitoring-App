@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import User
+from .models import User,EmailConfirm
 # Register your models here.
 class AdminUser(admin.ModelAdmin):
     list_display=['email','date_joined','last_login','is_staff','is_active']
@@ -11,3 +11,4 @@ class AdminUser(admin.ModelAdmin):
     fieldsets=[]
 
 admin.site.register(User)
+admin.site.register(EmailConfirm)
