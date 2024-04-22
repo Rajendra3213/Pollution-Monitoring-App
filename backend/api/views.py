@@ -13,6 +13,7 @@ from .schema import RefreshIn,LoginIn,RegisterIn,UserComplainIn,UserComplainList
 from .auth import CustomHttpBearer,get_tokens_for_user,get_user_id_from_token
 from complain.models import UserComplain
 from typing import List
+from django.db.models import Q
 
 router = Router()
 
@@ -96,8 +97,8 @@ def get_complain_list(request,data:UserLocationIn):
     rounded_latitude = float(str(data.latitude)[:lat_index+3])
     print(rounded_longitude,rounded_latitude)
     usercomplains = UserComplain.objects.filter(
-    longitude__startswith=rounded_longitude,
-    latitude__startswith=rounded_latitude
+    Q(longitude__startswith=rounded_longitude)|
+    Q(latitude__startswith=rounded_latitude)
     )
     print(usercomplains)
     return list(usercomplains.values("id", "longitude", "latitude"))
