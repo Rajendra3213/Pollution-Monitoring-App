@@ -1,14 +1,15 @@
 from django.contrib import admin
 from .models import User,EmailConfirm
-# Register your models here.
-class AdminUser(admin.ModelAdmin):
-    list_display=['email','date_joined','last_login','is_staff','is_active']
-    search_fields=['email']
-    readonly_fields=['date_joined','last_login','id','password']
+from unfold.admin import ModelAdmin
+from django.contrib.auth.models import Group
 
-    filter_horizontal=[]
-    list_filter=[]
-    fieldsets=[]
+admin.site.unregister(Group)
 
-admin.site.register(User)
-admin.site.register(EmailConfirm)
+
+@admin.register(User)
+class UserAdmin(ModelAdmin):
+    pass
+
+@admin.register(EmailConfirm)
+class EmailAdmin(ModelAdmin):
+    pass

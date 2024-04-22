@@ -1,3 +1,6 @@
 .venv/
 __pycache__/
 token.txt
+db.sqlite3
+.env
+static/

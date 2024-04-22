@@ -8,6 +8,9 @@ from django.utils.html import strip_tags
 import os
 # Create your views here.
 
+class Home(View):
+    def get(self,request):
+        return render(request,"CustomUser/landing_page.html")
 class EmailVerification(View):
 
     def get(self,request):

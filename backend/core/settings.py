@@ -13,6 +13,10 @@ from datetime import timedelta
 from pathlib import Path
 from dotenv import load_dotenv
 import os
+# from django.conf.urls.static import static
+from django.templatetags.static import static
+from django.urls import reverse_lazy
+from django.utils.translation import gettext_lazy as _
 
 load_dotenv()
 
@@ -35,6 +39,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+     "unfold",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -44,7 +49,7 @@ INSTALLED_APPS = [
     'CustomUser',
     'rest_framework',
     'rest_framework_simplejwt',
-    'rest_framework_simplejwt.token_blacklist'
+    # 'rest_framework_simplejwt.token_blacklist'
 ]
 
 MIDDLEWARE = [
@@ -189,3 +194,40 @@ EMAIL_HOST = 'sandbox.smtp.mailtrap.io'
 EMAIL_HOST_USER = '9b56662bd9bc00'
 EMAIL_HOST_PASSWORD = '2b8b2184d7cb60'
 EMAIL_PORT = '2525'
+
+#unfold
+BACKEND_URL=os.environ.get('BACKEND_URL')
+UNFOLD = {
+    "SITE_TITLE": "WasterWatch Nepal",
+    "SITE_HEADER": "WasterWatch Nepal",
+    "SITE_URL": "/",
+    "SHOW_HISTORY": False,
+    "SITE_ICON": {
+        "light": lambda request: static("homepage/wwn-favicon.svg"), 
+        "dark": lambda request: static("homepage/wwn-favicon.svg"),
+    },
+     "COLORS": {
+        "primary": {
+            "50": "233 245 235",
+            "100": "209 237 212",
+            "200": "179 222 179",
+            "300": "148 206 146",
+            "400": "123 194 119",
+            "500": "94 188 103",
+            "600": "77 176 85",
+            "700": "66 164 74",
+            "800": "57 148 63",
+            "900": "46 128 52",
+            "950": "23 87 32"
+        }
+    },  
+     "SIDEBAR": {
+        "show_search": True,
+        "show_all_applications": True,
+    }, 
+}
+
+#static
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
