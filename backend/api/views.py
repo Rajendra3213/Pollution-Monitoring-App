@@ -92,8 +92,8 @@ def add_complain(request,data:UserComplainIn=Form(...),file:UploadedFile=File(..
 def get_complain_list(request,data:UserLocationIn):
     lon_index=str(data.longitude).index('.')
     lat_index=str(data.latitude).index('.')
-    rounded_longitude = float(str(data.longitude)[:lon_index+4])
-    rounded_latitude = float(str(data.latitude)[:lat_index+4])
+    rounded_longitude = float(str(data.longitude)[:lon_index+3])
+    rounded_latitude = float(str(data.latitude)[:lat_index+3])
     print(rounded_longitude,rounded_latitude)
     usercomplains = UserComplain.objects.filter(
     longitude__startswith=rounded_longitude,
@@ -101,3 +101,13 @@ def get_complain_list(request,data:UserLocationIn):
     )
     print(usercomplains)
     return list(usercomplains.values("id", "longitude", "latitude"))
+
+@router.get('complain/select/{id}',auth=CustomHttpBearer())
+def get_single_complain_data(request,id:int):
+    complain_data=get_object_or_404(UserComplain,id=id)
+    print(complain_data.image)
+    return NinjaAPI().create_response(request,{
+        "image":complain_data.image.url,
+        "description":complain_data.description,
+        "date":complain_data.date_of_complain
+    },status=201)
