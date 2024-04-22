@@ -92,29 +92,66 @@ def add_complain(request,data:UserComplainIn=Form(...),file:UploadedFile=File(..
 
 @router.post('complain/list',auth=CustomHttpBearer(),response=List[UserComplainListOut])
 def get_complain_list(request,data:UserLocationIn):
-    lon_index=str(data.longitude).index('.')
-    lat_index=str(data.latitude).index('.')
-    rounded_longitude = float(str(data.longitude)[:lon_index+3])
-    rounded_latitude = float(str(data.latitude)[:lat_index+3])
-    print(rounded_longitude,rounded_latitude)
-    usercomplains = UserComplain.objects.filter(
-    Q(longitude__startswith=rounded_longitude)|
-    Q(latitude__startswith=rounded_latitude)
-    )
-    print(usercomplains)
-    return list(usercomplains.values("id", "longitude", "latitude"))
+    if request.auth is None:
+        return 401
+    else:
+        lon_index=str(data.longitude).index('.')
+        lat_index=str(data.latitude).index('.')
+        rounded_longitude = float(str(data.longitude)[:lon_index+3])
+        rounded_latitude = float(str(data.latitude)[:lat_index+3])
+        print(rounded_longitude,rounded_latitude)
+        usercomplains = UserComplain.objects.filter(
+        Q(longitude__startswith=rounded_longitude)|
+        Q(latitude__startswith=rounded_latitude)
+        )
+        print(usercomplains)
+        return list(usercomplains.values("id", "longitude", "latitude"))
 
 @router.get('complain/select/{id}',auth=CustomHttpBearer())
 def get_single_complain_data(request,id:int):
-    complain_data=get_object_or_404(UserComplain,id=id)
-    print(complain_data.image)
-    return NinjaAPI().create_response(request,{
-        "image":complain_data.image.url,
-        "description":complain_data.description,
-        "date":complain_data.date_of_complain
-    },status=201)
+    if request.auth is None:
+        return 401
+    else:
+        complain_data=get_object_or_404(UserComplain,id=id)
+        print(complain_data.image)
+        return NinjaAPI().create_response(request,{
+            "image":complain_data.image.url,
+            "description":complain_data.description,
+            "date":complain_data.date_of_complain
+        },status=201)
 
-@router.get('event/all',response=List[EventOut])
+@router.get('event/all',auth=CustomHttpBearer(),response=List[EventOut])
 def get_all_events(request):
-    event_list=Event.objects.all()
-    return list(event_list.values("id","title","image","description","start_date","end_date","location"))
+    if request.auth is None:
+        return 401
+    else:
+        event_list=Event.objects.all()
+        return list(event_list.values("id","title","start_date"))
+    
+@router.get('event/detail/{int}',auth=CustomHttpBearer())
+def get_single_event(request,id:int):
+    if request.auth is None:
+        return 401
+    else:
+        event=get_object_or_404(Event,id=id)
+        return NinjaAPI().create_response(request,{
+            "id":event.id,
+            "title":event.title,
+            "description":event.description,
+            "image":event.image.url,
+            "start_date":event.start_date,
+            "end_date":event.end_date,
+            "location":event.location
+        },status=200)
+    
+@router.post('event/signup/{int}',auth=CustomHttpBearer())
+def get_single_event(request,id:int):
+    if request.auth is None:
+        return 401
+    else:
+        user_id=request.auth[1]['user_id']
+        user=get_object_or_404(User,id=user_id)
+        event=get_object_or_404(Event,id=id)
+        event.signed_users.add(user)
+        event.save()
+        return NinjaAPI().create_response(request,{'detail':'Sucessfully Registered for the event'},status=202)

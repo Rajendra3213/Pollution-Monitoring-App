@@ -19,7 +19,6 @@ class CustomHttpBearer(HttpBearer):
             authentication = JWTAuthentication()
             validated_token = authentication.get_validated_token(token)
             user = authentication.get_user(validated_token)
-            # print(user,validated_token)
             return user, validated_token
         except InvalidToken:
             return None

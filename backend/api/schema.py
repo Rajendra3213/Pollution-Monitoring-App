@@ -59,8 +59,4 @@ class UserLocationIn(BaseModel):
 class EventOut(BaseModel):
     id: int
     title: str
-    image: Optional[str]
-    description: str
     start_date: datetime
-    end_date: datetime
-    location: str
