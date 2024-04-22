@@ -12,8 +12,8 @@ def get_street_name(latitude, longitude):
     return None
 
 # Example usage
-latitude = 27.660361
-longitude =85.316299
+latitude = 27.659458
+longitude =85.314408
 street_name = get_street_name(latitude, longitude)
 if street_name:
     print(f"Street Name: {street_name}")

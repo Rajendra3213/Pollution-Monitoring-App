@@ -49,7 +49,8 @@ INSTALLED_APPS = [
     'CustomUser',
     'rest_framework',
     'rest_framework_simplejwt',
-    # 'rest_framework_simplejwt.token_blacklist'
+    'rest_framework_simplejwt.token_blacklist',
+    'complain',
 ]
 
 MIDDLEWARE = [
@@ -231,3 +232,7 @@ UNFOLD = {
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
+
+#media
+MEDIA_URL = '/media/'
+MEDIA_ROOT =BASE_DIR/'media'

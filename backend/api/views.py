@@ -1,55 +1,20 @@
-from ninja import Router,NinjaAPI
+from ninja import Router,NinjaAPI,Form,File
+from ninja.files import UploadedFile
 from CustomUser.models import User,EmailConfirm
 from django.contrib.auth import authenticate
-from rest_framework_simplejwt.tokens import RefreshToken
-from ninja.security import HttpBearer
-from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework_simplejwt.exceptions import InvalidToken
-from rest_framework_simplejwt.tokens import RefreshToken
-from pydantic import BaseModel,EmailStr,ValidationError,field_validator,Field
-import re
 from django.utils import timezone
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
+from django.shortcuts import get_object_or_404
+from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils.html import strip_tags
 import os
+from .schema import RefreshIn,LoginIn,RegisterIn,UserComplainIn,UserComplainListOut,UserLocationIn
+from .auth import CustomHttpBearer,get_tokens_for_user,get_user_id_from_token
+from complain.models import UserComplain
+from typing import List
 
 router = Router()
-
-class RegisterIn(BaseModel):
-    email:EmailStr
-    password:str
-    first_name:str|None=None
-    last_name:str|None=None
-    phone_number:str|None=None
-    address:str|None=None
-
-    @field_validator('password')
-    def validate_password(cls,value):
-        pattern=r'^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$'
-        if not re.match(pattern,value):
-            raise ValueError("Enter a valid password")
-        return value
-    @field_validator('phone_number')
-    def validate_number(cls,value):
-        pattern=r'\+?\d{10,}'
-        if not re.match(pattern,value):
-            raise ValueError("Enter a valid number")
-        return value
-
-class LoginIn(BaseModel):
-    email:EmailStr
-    password:str
-
-    @field_validator('password')
-    def validate_password(cls,value):
-        pattern=r'^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$'
-        if not re.match(pattern,value):
-            raise ValueError("Enter a valid password")
-        return value
-
-class RefreshIn(BaseModel):
-    refresh:str
 
 @router.post('register/')
 def registerUser(request,data:RegisterIn):
@@ -80,15 +45,6 @@ def registerUser(request,data:RegisterIn):
     message.send()
     return {"message": "User registered successfully"}
 
-class CustomHttpBearer(HttpBearer):
-    def authenticate(self, request, token):
-        try:
-            authentication = JWTAuthentication()
-            validated_token = authentication.get_validated_token(token)
-            user = authentication.get_user(validated_token)
-            return user, validated_token
-        except InvalidToken:
-            return None
             
 @router.get('check/',auth=CustomHttpBearer())
 def check(request):
@@ -96,13 +52,7 @@ def check(request):
         return 401
     return {"msg":"Token Valid"}
 
-def get_tokens_for_user(user):
-    refresh = RefreshToken.for_user(user)
-    return {
-        "msg":"sucessful login",
-        "refresh": str(refresh),
-        "access": str(refresh.access_token),
-    }
+
 @router.post('login/')
 def loginUser(request,logindata:LoginIn):
     user=authenticate(email=logindata.email,password=logindata.password)
@@ -120,3 +70,34 @@ def tokenRefresh(request,data:RefreshIn):
     if not is_expired:
         return NinjaAPI().create_response(request,{"access":str(checkToken.access_token)},status=201)
     return NinjaAPI().create_response(request,{"detail":"token is expired"},status=401)
+
+@router.post('complain/add',auth=CustomHttpBearer())
+def add_complain(request,data:UserComplainIn=Form(...),file:UploadedFile=File(...)):
+    if request.auth is None:
+        return 401
+    else:
+        user_id=request.auth[1]['user_id']
+        user=get_object_or_404(User,id=user_id)
+        user_complain=UserComplain.objects.create(
+            longitude=data.longitude,
+            latitude=data.latitude,
+            complain_user=user,
+            image=file,
+            description=data.description
+        )
+        user_complain.save()
+        return  NinjaAPI().create_response(request,{"detail":"upload sucessful"},status=201)
+
+@router.post('complain/list',auth=CustomHttpBearer(),response=List[UserComplainListOut])
+def get_complain_list(request,data:UserLocationIn):
+    lon_index=str(data.longitude).index('.')
+    lat_index=str(data.latitude).index('.')
+    rounded_longitude = float(str(data.longitude)[:lon_index+4])
+    rounded_latitude = float(str(data.latitude)[:lat_index+4])
+    print(rounded_longitude,rounded_latitude)
+    usercomplains = UserComplain.objects.filter(
+    longitude__startswith=rounded_longitude,
+    latitude__startswith=rounded_latitude
+    )
+    print(usercomplains)
+    return list(usercomplains.values("id", "longitude", "latitude"))
