@@ -9,8 +9,9 @@ from django.shortcuts import get_object_or_404
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils.html import strip_tags
 import os
-from .schema import RefreshIn,LoginIn,RegisterIn,UserComplainIn,UserComplainListOut,UserLocationIn
-from .auth import CustomHttpBearer,get_tokens_for_user,get_user_id_from_token
+from .schema import RefreshIn,LoginIn,RegisterIn,UserComplainIn,UserComplainListOut,UserLocationIn,EventOut
+from .auth import CustomHttpBearer,get_tokens_for_user
+from event.models import Event
 from complain.models import UserComplain
 from typing import List
 from django.db.models import Q
@@ -112,3 +113,8 @@ def get_single_complain_data(request,id:int):
         "description":complain_data.description,
         "date":complain_data.date_of_complain
     },status=201)
+
+@router.get('event/all',response=List[EventOut])
+def get_all_events(request):
+    event_list=Event.objects.all()
+    return list(event_list.values("id","title","image","description","start_date","end_date","location"))

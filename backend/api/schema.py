@@ -1,6 +1,8 @@
 from pydantic import BaseModel,EmailStr,ValidationError,field_validator,Field,AnyUrl
 from datetime import datetime
+from typing import List,Optional
 import re
+
 class RegisterIn(BaseModel):
     email:EmailStr
     password:str
@@ -53,3 +55,12 @@ class UserComplainListOut(BaseModel):
 class UserLocationIn(BaseModel):
     longitude: float
     latitude: float
+
+class EventOut(BaseModel):
+    id: int
+    title: str
+    image: Optional[str]
+    description: str
+    start_date: datetime
+    end_date: datetime
+    location: str
