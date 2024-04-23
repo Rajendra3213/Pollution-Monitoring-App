@@ -1,0 +1,14 @@
+<nav class="navbar p-3 m-0" style="background-color: #5EBC67;">
+    <div class="container-fluid">
+        <a href="/" class="navbar-brand" style="color:#152232; font-weight: 500;">WasteWatch Nepal</a>
+        {% if user.is_authenticated %}
+        <div>
+            <a href="/map/view" class="btn btn-lg px-4 me-md-2 btn-outline-success" style="color: #FFFFFF;">Map</a>
+            <a href="/admin/" class="btn btn-lg px-4 me-md-2 btn-outline-success" style="color: #FFFFFF;">Admin</a>
+            <a href="/user/logout/" class="btn btn-lg px-4 me-md-2 btn-outline-danger" style="color: #FFFFFF;">Logout</a>
+        </div>
+        {% else %}
+        <a href="/login/" class="btn btn-lg px-4 me-md-2 btn-outline-success" style="color: #FFFFFF;">Login</a>
+        {% endif %}
+    </div>
+</nav>

@@ -6,6 +6,7 @@
     {{map.header.render|safe}}
   </head>
   <body>
+    {% include 'CustomUser/navbar.html' %}
     {{map.html.render|safe}}
     <script>
       {{map.script.render|safe}}

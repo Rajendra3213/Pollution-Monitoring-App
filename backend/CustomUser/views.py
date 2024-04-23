@@ -9,10 +9,11 @@ from django.utils.html import strip_tags
 import os
 import folium
 from .forms import LoginForm
-from django.contrib.auth import authenticate,login
+from django.contrib.auth import authenticate,login,logout
 from complain.models import UserComplain
 from django.template.loader import render_to_string
 import branca
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 class Home(View):
     def get(self,request):
@@ -93,7 +94,12 @@ def make_markers_and_add_to_map(map, complain):
             icon = folium.Icon(icon='fa-trash', prefix='fa')
         ).add_to(map)
     
-class MapView(TemplateView):
+class MapView(LoginRequiredMixin,TemplateView):
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('CustomUser:admin_login')
+        return super().dispatch(request, *args, **kwargs)
+    
     template_name = 'CustomUser/map.html'    
 
     def get_context_data(self, **kwargs):
@@ -110,3 +116,12 @@ class MapView(TemplateView):
         
         figure.render()
         return {"map": figure}
+    
+class LogoutView(LoginRequiredMixin,View):
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('CustomUser:login')
+        return super().dispatch(request, *args, **kwargs)
+    def get(self,request):
+        logout(request)
+        return redirect('CustomUser:home_page')
