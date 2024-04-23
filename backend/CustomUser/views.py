@@ -1,13 +1,18 @@
 from django.shortcuts import render,get_object_or_404,redirect
 from django.views import View
+from django.views.generic import TemplateView
 from .models import User,EmailConfirm
 from django.utils import timezone
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 import os
+import folium
 from .forms import LoginForm
 from django.contrib.auth import authenticate,login
+from complain.models import UserComplain
+from django.template.loader import render_to_string
+import branca
 
 class Home(View):
     def get(self,request):
@@ -75,3 +80,33 @@ class LoginView(View):
                     return render(request,'CustomUser/login.html',{'form':loginVal})
         loginVal.add_error(None,'Error Email or password')
         return render(request,'CustomUser/login.html',{'form':loginVal})
+    
+def make_markers_and_add_to_map(map, complain):
+    backend_url=os.environ.get("BACKEND_URL")
+    html_code = render_to_string('CustomUser/popover.html',context={"c":complain,"b_url":backend_url})
+    iframe = branca.element.IFrame(html=html_code,width="300px",height="400px")
+    popup = folium.Popup(iframe,max_width="300px")
+    folium.Marker(
+            location = [complain.longitude, complain.latitude],
+            popup = popup,
+            tooltip = complain,
+            icon = folium.Icon(icon='fa-trash', prefix='fa')
+        ).add_to(map)
+    
+class MapView(TemplateView):
+    template_name = 'CustomUser/map.html'    
+
+    def get_context_data(self, **kwargs):
+        figure = folium.Figure()
+        map = folium.Map(
+            location = [27.680677, 85.326492],
+            zoom_start = 14,
+            tiles = 'OpenStreetMap')
+
+        map.add_to(figure)
+        
+        for complain in UserComplain.objects.all():
+            make_markers_and_add_to_map(map, complain)
+        
+        figure.render()
+        return {"map": figure}
