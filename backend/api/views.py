@@ -128,7 +128,7 @@ def get_all_events(request):
         event_list=Event.objects.all()
         return list(event_list.values("id","title","start_date"))
     
-@router.get('event/detail/{int}',auth=CustomHttpBearer())
+@router.get('event/detail/{id}',auth=CustomHttpBearer())
 def get_single_event(request,id:int):
     if request.auth is None:
         return 401
@@ -144,7 +144,7 @@ def get_single_event(request,id:int):
             "location":event.location
         },status=200)
     
-@router.post('event/signup/{int}',auth=CustomHttpBearer())
+@router.post('event/signup/{id}',auth=CustomHttpBearer())
 def get_single_event(request,id:int):
     if request.auth is None:
         return 401

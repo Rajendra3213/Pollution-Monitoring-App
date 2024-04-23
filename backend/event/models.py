@@ -7,7 +7,7 @@ class Event(models.Model):
     description = models.TextField()
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
-    signed_users = models.ManyToManyField(User,blank=True,null=True)
+    signed_users = models.ManyToManyField(User,blank=True)
     location = models.CharField(max_length=255)
 
     def __str__(self):

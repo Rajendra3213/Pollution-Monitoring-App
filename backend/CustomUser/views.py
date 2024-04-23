@@ -1,4 +1,4 @@
-from django.shortcuts import render,HttpResponse,get_object_or_404
+from django.shortcuts import render,get_object_or_404,redirect
 from django.views import View
 from .models import User,EmailConfirm
 from django.utils import timezone
@@ -6,11 +6,13 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 import os
-# Create your views here.
+from .forms import LoginForm
+from django.contrib.auth import authenticate,login
 
 class Home(View):
     def get(self,request):
         return render(request,"CustomUser/landing_page.html")
+    
 class EmailVerification(View):
 
     def get(self,request):
@@ -54,3 +56,22 @@ class EmailVerification(View):
         except:
             sucessful=False
         return render(request,"CustomUser/email_resend.html",context={"sucess":sucessful})
+    
+class LoginView(View):
+    def get(self,request):
+        return render(request,'CustomUser/login.html',{'form':LoginForm()})
+    def post(self,request):
+        loginVal=LoginForm(request.POST)
+        if loginVal.is_valid():
+            email=loginVal.cleaned_data['email']
+            password=loginVal.cleaned_data['password']
+            getUser=authenticate(email=email,password=password)
+            if getUser is not None:
+                if getUser.is_superuser:
+                    login(request,getUser)
+                    return redirect('CustomUser:home_page')
+                else:
+                    loginVal.add_error(None,'Only superuser can login')
+                    return render(request,'CustomUser/login.html',{'form':loginVal})
+        loginVal.add_error(None,'Error Email or password')
+        return render(request,'CustomUser/login.html',{'form':loginVal})
