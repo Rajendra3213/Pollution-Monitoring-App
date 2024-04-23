@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import User,EmailConfirm
+from .models import User,EmailConfirm,UserPoint,TreePlantation
 from unfold.admin import ModelAdmin
 from django.contrib.auth.models import Group
 
@@ -12,4 +12,12 @@ class UserAdmin(ModelAdmin):
 
 @admin.register(EmailConfirm)
 class EmailAdmin(ModelAdmin):
+    pass
+
+@admin.register(UserPoint)
+class UserPointAdmin(ModelAdmin):
+    pass
+
+@admin.register(TreePlantation)
+class TreePlantationAdmin(ModelAdmin):
     pass

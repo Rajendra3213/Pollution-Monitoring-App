@@ -88,7 +88,7 @@ def make_markers_and_add_to_map(map, complain):
     iframe = branca.element.IFrame(html=html_code,width="300px",height="400px")
     popup = folium.Popup(iframe,max_width="300px")
     folium.Marker(
-            location = [complain.longitude, complain.latitude],
+            location = [complain.latitude, complain.longitude],
             popup = popup,
             tooltip = complain,
             icon = folium.Icon(icon='fa-trash', prefix='fa')

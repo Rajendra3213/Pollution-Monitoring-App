@@ -81,3 +81,18 @@ class EmailConfirm(models.Model):
     class Meta:
         verbose_name='Email Verification'
         verbose_name_plural='Email Verifications'
+
+class UserPoint(models.Model):
+    point=models.IntegerField()
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.user.email} point:{self.point}'
+    
+class TreePlantation(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6,blank=True,null=True)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6,blank=True,null=True)
+    planted=models.BooleanField(default=False)
+    def __str__(self):
+        return f"Planted by:{self.user.get_full_name()} status:{self.planted}"

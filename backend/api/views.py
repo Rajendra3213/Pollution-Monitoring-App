@@ -1,6 +1,7 @@
+from datetime import datetime
 from ninja import Router,NinjaAPI,Form,File
 from ninja.files import UploadedFile
-from CustomUser.models import User,EmailConfirm
+from CustomUser.models import User,EmailConfirm,UserPoint,TreePlantation
 from django.contrib.auth import authenticate
 from django.utils import timezone
 from django.core.mail import EmailMultiAlternatives
@@ -9,12 +10,13 @@ from django.shortcuts import get_object_or_404
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils.html import strip_tags
 import os
-from .schema import RefreshIn,LoginIn,RegisterIn,UserComplainIn,UserComplainListOut,UserLocationIn,EventOut
+from .schema import RefreshIn,LoginIn,RegisterIn,UserComplainIn,UserComplainListOut,UserLocationIn,EventOut,TreeOut
 from .auth import CustomHttpBearer,get_tokens_for_user
 from event.models import Event
 from complain.models import UserComplain
 from typing import List
 from django.db.models import Q
+from django.http import JsonResponse
 
 router = Router()
 
@@ -57,8 +59,6 @@ def check(request):
 
 @router.post('login/')
 def loginUser(request,logindata:LoginIn):
-    print(logindata)
-    print("data:",logindata.email,logindata.password)
     register_user=get_object_or_404(User,email=logindata.email)
     if register_user is None:
         return NinjaAPI().create_response(request,{"detail":"User not found"},status=400)
@@ -70,7 +70,6 @@ def loginUser(request,logindata:LoginIn):
             return NinjaAPI().create_response(request,{"detail":"User is inactive"},status=401)
         else:
             if user is not None:
-                print("return sucessful")
                 return get_tokens_for_user(user)
         
 
@@ -97,6 +96,9 @@ def add_complain(request,data:UserComplainIn=Form(...),file:UploadedFile=File(..
             description=data.description
         )
         user_complain.save()
+        user_point, created = UserPoint.objects.get_or_create(user=user, defaults={'point': 0})
+        user_point.point += 10
+        user_point.save()
         return  NinjaAPI().create_response(request,{"detail":"upload sucessful"},status=201)
 
 @router.post('complain/list',auth=CustomHttpBearer(),response=List[UserComplainListOut])
@@ -108,13 +110,12 @@ def get_complain_list(request,data:UserLocationIn):
         lat_index=str(data.latitude).index('.')
         rounded_longitude = float(str(data.longitude)[:lon_index+3])
         rounded_latitude = float(str(data.latitude)[:lat_index+3])
-        print(rounded_longitude,rounded_latitude)
         usercomplains = UserComplain.objects.filter(
-        Q(longitude__startswith=rounded_longitude)|
+        Q(longitude__startswith=rounded_longitude)&
         Q(latitude__startswith=rounded_latitude)
         )
-        print(usercomplains)
-        return list(usercomplains.values("id", "longitude", "latitude"))
+        response_data = list(usercomplains.values("id", "longitude", "latitude"))
+        return JsonResponse(response_data, safe=False)
 
 @router.get('complain/select/{id}',auth=CustomHttpBearer())
 def get_single_complain_data(request,id:int):
@@ -122,7 +123,6 @@ def get_single_complain_data(request,id:int):
         return 401
     else:
         complain_data=get_object_or_404(UserComplain,id=id)
-        print(complain_data.image)
         return NinjaAPI().create_response(request,{
             "image":complain_data.image.url,
             "description":complain_data.description,
@@ -134,8 +134,9 @@ def get_all_events(request):
     if request.auth is None:
         return 401
     else:
-        event_list=Event.objects.all()
-        return list(event_list.values("id","title","start_date"))
+        current_time = datetime.now()
+        event_list = Event.objects.filter(start_date__gt=current_time)
+        return list(event_list.values("id","title","start_date","end_date","image","location","description"))
     
 @router.get('event/detail/{id}',auth=CustomHttpBearer())
 def get_single_event(request,id:int):
@@ -154,7 +155,7 @@ def get_single_event(request,id:int):
         },status=200)
     
 @router.post('event/signup/{id}',auth=CustomHttpBearer())
-def get_single_event(request,id:int):
+def signup_event(request,id:int):
     if request.auth is None:
         return 401
     else:
@@ -163,4 +164,82 @@ def get_single_event(request,id:int):
         event=get_object_or_404(Event,id=id)
         event.signed_users.add(user)
         event.save()
+        user_point, created = UserPoint.objects.get_or_create(user=user, defaults={'point': 0})
+        user_point.point += 10
+        user_point.save()
+        plain_message=f"You have sucessfully signed up for {event.title}"
+        message=EmailMultiAlternatives(
+        subject="WasteWatch Nepal Event Signup!!",
+        body=plain_message,
+        from_email=None,
+        to=[user.email]
+    )
+        message.send()
         return NinjaAPI().create_response(request,{'detail':'Sucessfully Registered for the event'},status=202)
+    
+@router.get('data/',auth=CustomHttpBearer())
+def get_user_data(request):
+    if request.auth is None:
+        return 401
+    else:
+        user_id=request.auth[1]['user_id']
+        user=get_object_or_404(User,id=user_id)
+        try:
+            userpoint = UserPoint.objects.get(user=user)
+            point = userpoint.point
+        except UserPoint.DoesNotExist:
+            point = 0
+        return NinjaAPI().create_response(request,{
+            'email':user.email,
+            "first_name":user.first_name,
+            "last_name":user.last_name,
+            "number":user.phone_number,
+            "address":user.address,
+            "point":point
+            },status=202)
+    
+@router.get('plantation/',auth=CustomHttpBearer(),response=list[TreeOut])
+def get_all_plantation(request):
+    if request.auth is None:
+        return 401
+    else:
+        user_id=request.auth[1]['user_id']
+        user=get_object_or_404(User,id=user_id)
+        try:
+            trees=TreePlantation.objects.filter(user=user)
+            return list(trees.values("latitude","longitude","planted"))
+        except TreePlantation.DoesNotExist:
+            return NinjaAPI().create_response(request,{},status=200)
+
+@router.post('donate/plant/', auth=CustomHttpBearer())
+def donate_plant(request):
+    if request.auth is None:
+        return 401
+    else:
+        user_id = request.auth[1]['user_id']
+        user = get_object_or_404(User, id=user_id)
+        try:
+            userpoint = UserPoint.objects.get(user=user)
+            point = userpoint.point
+        except UserPoint.DoesNotExist:
+            userpoint = UserPoint.objects.create(user=user, point=0)
+            point = 0
+
+        if point > 1000:
+            try:
+                tree = TreePlantation.objects.create(user=user)
+                plain_message = "Thank you for your donation. We will update you via email when the plantation is completed."
+                message = EmailMultiAlternatives(
+                    subject="WasteWatch Nepal Tree Donation!",
+                    body=plain_message,
+                    from_email=None,
+                    to=[user.email]
+                )
+                message.send()
+                userpoint.point = userpoint.point - 1000
+                userpoint.save()
+                return NinjaAPI().create_response(request, {"detail": "Donation Successful! Plantation Pending"}, status=200)
+            except:
+                return NinjaAPI().create_response(request, {"detail": "Error"}, status=400)
+        else:
+            return NinjaAPI().create_response(request, {"detail": "Not enough points"}, status=400)

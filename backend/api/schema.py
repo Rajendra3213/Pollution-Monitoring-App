@@ -52,4 +52,12 @@ class UserLocationIn(BaseModel):
 class EventOut(BaseModel):
     id: int
     title: str
+    image:str
     start_date: datetime
+    end_date:datetime
+    location:str
+
+class TreeOut(BaseModel):
+    longitude: float|None
+    latitude: float|None
+    planted:bool
