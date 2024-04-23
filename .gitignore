@@ -3,5 +3,4 @@ __pycache__/
 token.txt
 db.sqlite3
 .env
-static/
 media/
