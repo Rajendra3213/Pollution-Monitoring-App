@@ -57,13 +57,22 @@ def check(request):
 
 @router.post('login/')
 def loginUser(request,logindata:LoginIn):
+    print(logindata)
+    print("data:",logindata.email,logindata.password)
+    register_user=get_object_or_404(User,email=logindata.email)
+    if register_user is None:
+        return NinjaAPI().create_response(request,{"detail":"User not found"},status=400)
     user=authenticate(email=logindata.email,password=logindata.password)
-    if user.is_active==False:
-        return NinjaAPI().create_response(request,{"detail":"User is inactive"},status=401)
+    if user is None:
+        return NinjaAPI().create_response(request,{"detail":"Email or password incorrect"},status=400)
     else:
-        if user is not None:
-            return get_tokens_for_user(user)
-    return NinjaAPI().create_response(request,{"detail":"User not found"},status=400)
+        if user.is_active==False:
+            return NinjaAPI().create_response(request,{"detail":"User is inactive"},status=401)
+        else:
+            if user is not None:
+                print("return sucessful")
+                return get_tokens_for_user(user)
+        
 
 @router.post('token/refresh/')
 def tokenRefresh(request,data:RefreshIn):

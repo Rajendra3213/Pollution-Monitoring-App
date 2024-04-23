@@ -28,13 +28,6 @@ class LoginIn(BaseModel):
     email:EmailStr
     password:str
 
-    @field_validator('password')
-    def validate_password(cls,value):
-        pattern=r'^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$'
-        if not re.match(pattern,value):
-            raise ValueError("Enter a valid password")
-        return value
-
 class RefreshIn(BaseModel):
     refresh:str
 
