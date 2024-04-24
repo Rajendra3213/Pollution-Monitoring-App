@@ -1,14 +1,14 @@
 from django.shortcuts import render,get_object_or_404,redirect
 from django.views import View
 from django.views.generic import TemplateView
-from .models import User,EmailConfirm
+from .models import User,EmailConfirm,UserPoint,TreePlantation
 from django.utils import timezone
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 import os
 import folium
-from .forms import LoginForm
+from .forms import LoginForm,DonationForm
 from django.contrib.auth import authenticate,login,logout
 from complain.models import UserComplain
 from django.template.loader import render_to_string
@@ -125,3 +125,37 @@ class LogoutView(LoginRequiredMixin,View):
     def get(self,request):
         logout(request)
         return redirect('CustomUser:home_page')
+    
+class DonateListView(LoginRequiredMixin,View):
+    def get(self,request):
+        donations=TreePlantation.objects.filter(planted=False)
+        return render(request,"CustomUser/donation_pending_list.html",context={'donations':donations})
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('CustomUser:login')
+        return super().dispatch(request, *args, **kwargs)
+    
+class DonateCompleteView(LoginRequiredMixin, View):
+    def get(self, request, id):
+        return render(request, "CustomUser/make_donation.html", context={'form': DonationForm, 'id': id})
+
+    def post(self, request, id):
+        donation = get_object_or_404(TreePlantation, pk=id)
+        print(donation.user.email)
+        donate_form = DonationForm(request.POST, instance=donation)
+        if donate_form.is_valid():
+            donate_form.save()
+            plain_message = "Your donation Tree has been planted."
+            message = EmailMultiAlternatives(
+            subject="WasteWatch Nepal Tree Sucessful Donation!",
+            body=plain_message,
+            from_email=None,
+            to=[donation.user.email]
+            )
+            message.send()
+            return redirect("CustomUser:donate_list")
+        return render(request, "CustomUser/make_donation.html", context={'form': donate_form})
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('CustomUser:login')
+        return super().dispatch(request, *args, **kwargs)

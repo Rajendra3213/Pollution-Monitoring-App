@@ -56,6 +56,7 @@ class EventOut(BaseModel):
     start_date: datetime
     end_date:datetime
     location:str
+    description:str
 
 class TreeOut(BaseModel):
     longitude: float|None

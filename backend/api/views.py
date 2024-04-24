@@ -17,6 +17,9 @@ from complain.models import UserComplain
 from typing import List
 from django.db.models import Q
 from django.http import JsonResponse
+import pickle5 as pickle
+import pandas as pd
+from django.conf import settings
 
 router = Router()
 
@@ -206,7 +209,7 @@ def get_all_plantation(request):
         user_id=request.auth[1]['user_id']
         user=get_object_or_404(User,id=user_id)
         try:
-            trees=TreePlantation.objects.filter(user=user)
+            trees=TreePlantation.objects.filter(user=user,planted=True)
             return list(trees.values("latitude","longitude","planted"))
         except TreePlantation.DoesNotExist:
             return NinjaAPI().create_response(request,{},status=200)
@@ -243,3 +246,18 @@ def donate_plant(request):
                 return NinjaAPI().create_response(request, {"detail": "Error"}, status=400)
         else:
             return NinjaAPI().create_response(request, {"detail": "Not enough points"}, status=400)
+
+def make_severity(latitude,longitude):
+    model_path =settings.BASE_DIR/"static/severity_model.pkl"
+    print(model_path)
+    with open(model_path, "rb") as f:
+        model = pickle.load(f)
+        data_to_predict = pd.DataFrame({'Longitude': [longitude], 'Latitude': [latitude]})
+
+        severity_prediction = model.predict(data_to_predict)
+        return severity_prediction
+
+@router.post('predict/')
+def get_predicted_severity(request,data:UserLocationIn):
+    severity=make_severity(data.longitude,data.longitude)
+    return {"severity":severity[0]}
