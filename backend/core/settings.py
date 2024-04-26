@@ -202,7 +202,7 @@ BACKEND_URL=os.environ.get('BACKEND_URL')
 UNFOLD = {
     "SITE_TITLE": "WasteWatch Nepal",
     "SITE_HEADER": "WasteWatch Nepal",
-    "SITE_URL": "/",
+    "SITE_URL": "/dashboard",
     "SHOW_HISTORY": False,
     "SITE_ICON": {
         "light": lambda request: static("homepage/wwn-favicon.svg"), 

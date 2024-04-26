@@ -1,0 +1,50 @@
+{% extends "CustomUser/base.html" %}
+{% block title %}Report{% endblock %}
+{% block content %}
+<h4 class="text-dark p-3">csv table</h4>
+
+<div>
+    <div class="card-body">
+        <p class="m-0">Welcome to</p>
+        <h5 style="color: #5EBC67;">WasteWatch Nepal Report</h5>
+        {% if csv_data %}
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Age</th>
+                    <th>Address</th>
+                    <th>Latitude</th>
+                    <th>Longitude</th>
+                    <th>Date of Complain</th>
+                    <th>Solved Date</th>
+                    <th>Validated By</th>
+                    <th>Image</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in csv_data %}
+                <tr>
+                    <td>{{ row.complain_user__age }}</td>
+                    <td>{{ row.complain_user__address }}</td>
+                    <td>{{ row.latitude }}</td>
+                    <td>{{ row.longitude }}</td>
+                    <td>{{ row.date_of_complain }}</td>
+                    <td>{{ row.solved_date }}</td>
+                    <td>{{ row.validated_by__name }}</td>
+                    <td>{{ row.image }}</td>
+                    <td>{{ row.description }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <ul class="list-group mt-3">
+            <li class="list-group-item p-3">
+                No report generation
+            </li>
+        </ul>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

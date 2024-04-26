@@ -20,4 +20,4 @@ class UserPointAdmin(ModelAdmin):
 
 @admin.register(TreePlantation)
 class TreePlantationAdmin(ModelAdmin):
-    pass
+    list_display=['id','user','planted','latitude','longitude']

@@ -90,6 +90,7 @@ def add_complain(request,data:UserComplainIn=Form(...),file:UploadedFile=File(..
     if request.auth is None:
         return 401
     else:
+        print(UserComplainIn)
         user_id=request.auth[1]['user_id']
         user=get_object_or_404(User,id=user_id)
         lon_index=str(data.longitude).index('.')
@@ -137,13 +138,15 @@ def get_single_complain_data(request,id:int):
         return 401
     else:
         complain_data=get_object_or_404(UserComplain,id=id)
+        validated_by_name = complain_data.validated_by.name if complain_data.validated_by else "Not assigned"
+        validated_by_contact = complain_data.validated_by.contact if complain_data.validated_by else "014211705"
         return NinjaAPI().create_response(request,{
             "image":complain_data.image.url,
             "description":complain_data.description,
             "date":complain_data.date_of_complain,
             "severity_level":complain_data.severity_level,
-            "validated_by":complain_data.validated_by.name,
-            "contact":complain_data.validated_by.contact
+            "validated_by":validated_by_name,
+            "contact":validated_by_contact
         },status=201)
 
 @router.get('event/all',auth=CustomHttpBearer(),response=List[EventOut])
@@ -258,7 +261,7 @@ def donate_plant(request):
                 userpoint.save()
                 return NinjaAPI().create_response(request, {"detail": "Donation Successful! Plantation Pending"}, status=200)
             except:
-                return NinjaAPI().create_response(request, {"detail": "Error"}, status=400)
+                return NinjaAPI().create_response(request, {"detail": "Error Try Again Aster some time"}, status=400)
         else:
             return NinjaAPI().create_response(request, {"detail": "Not enough points"}, status=400)
 

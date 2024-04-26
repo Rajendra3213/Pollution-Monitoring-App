@@ -1,4 +1,4 @@
-from django.shortcuts import render,get_object_or_404,redirect
+from django.shortcuts import render,get_object_or_404,redirect,HttpResponse
 from django.views import View
 from django.views.generic import TemplateView
 from .models import User,EmailConfirm,UserPoint,TreePlantation
@@ -14,6 +14,10 @@ from complain.models import UserComplain
 from django.template.loader import render_to_string
 import branca
 from django.contrib.auth.mixins import LoginRequiredMixin
+from event.models import Event
+from django.utils import timezone
+import csv
+from django.conf import settings
 
 class Home(View):
     def get(self,request):
@@ -75,13 +79,44 @@ class LoginView(View):
             if getUser is not None:
                 if getUser.is_superuser:
                     login(request,getUser)
-                    return redirect('CustomUser:home_page')
+                    return redirect('CustomUser:dashboard')
                 else:
                     loginVal.add_error(None,'Only superuser can login')
                     return render(request,'CustomUser/login.html',{'form':loginVal})
         loginVal.add_error(None,'Error Email or password')
         return render(request,'CustomUser/login.html',{'form':loginVal})
-    
+class Dashboard(LoginRequiredMixin,View):
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('CustomUser:admin_login')
+        return super().dispatch(request, *args, **kwargs)
+    def get(self,request):
+        total_user=User.objects.all().count()
+        complain_solved=UserComplain.objects.filter(solved=True).count()
+        complain_unsolved=UserComplain.objects.filter(solved=False).count()
+        event_previous=Event.objects.filter(start_date__lt=timezone.now()).count()
+        event_upcoming=Event.objects.filter(start_date__gt=timezone.now()).count()
+        tree_count=TreePlantation.objects.filter(planted=True).count()
+        context={
+            "dashboard":True,
+            "userreg":total_user,
+            "complain_solved":complain_solved,
+            "complain_unsolved":complain_unsolved,
+            "event_previous":event_previous,
+            "event_upcoming":event_upcoming,
+            "tree_count":tree_count,
+
+        }
+        return render(request,'CustomUser/dashboard.html',context)
+class EventView(LoginRequiredMixin,View):
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('CustomUser:admin_login')
+        return super().dispatch(request, *args, **kwargs)
+    def get(self,request):
+        event=Event.objects.filter(start_date__gt=timezone.now())
+        return render(request,'CustomUser/event.html',context={"event":True,"events":event})   
+     
 def make_markers_and_add_to_map(map, complain):
     backend_url=os.environ.get("BACKEND_URL")
     html_code = render_to_string('CustomUser/popover.html',context={"c":complain,"b_url":backend_url})
@@ -117,6 +152,37 @@ class MapView(LoginRequiredMixin,TemplateView):
         figure.render()
         return {"map": figure}
     
+def make_tree_markers_and_add_to_map(map, tree):
+    folium.Marker(
+            location = [tree.latitude, tree.longitude],
+            popup = f"Tree donated by:{tree.user.get_full_name()}",
+            tooltip = f"Tree location:{tree.latitude, tree.longitude}",
+            icon = folium.Icon(icon='fa-tree', prefix='fa')
+        ).add_to(map)
+    
+class TreeMapView(LoginRequiredMixin,TemplateView):
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('CustomUser:admin_login')
+        return super().dispatch(request, *args, **kwargs)
+    
+    template_name = 'CustomUser/tree_map.html'    
+
+    def get_context_data(self, **kwargs):
+        figure = folium.Figure()
+        map = folium.Map(
+            location = [27.680677, 85.326492],
+            zoom_start = 14,
+            tiles = 'OpenStreetMap')
+
+        map.add_to(figure)
+        
+        for tree in TreePlantation.objects.filter(planted=True):
+            make_tree_markers_and_add_to_map(map, tree)
+        
+        figure.render()
+        return {"map": figure}
+    
 class LogoutView(LoginRequiredMixin,View):
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
@@ -129,7 +195,7 @@ class LogoutView(LoginRequiredMixin,View):
 class DonateListView(LoginRequiredMixin,View):
     def get(self,request):
         donations=TreePlantation.objects.filter(planted=False)
-        return render(request,"CustomUser/donation_pending_list.html",context={'donations':donations})
+        return render(request,"CustomUser/donation_pending_list.html",context={'donations':donations,"treedonation":True})
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return redirect('CustomUser:login')
@@ -137,7 +203,7 @@ class DonateListView(LoginRequiredMixin,View):
     
 class DonateCompleteView(LoginRequiredMixin, View):
     def get(self, request, id):
-        return render(request, "CustomUser/make_donation.html", context={'form': DonationForm, 'id': id})
+        return render(request, "CustomUser/make_donation.html", context={'form': DonationForm, 'id': id,"treedonation":True})
 
     def post(self, request, id):
         donation = get_object_or_404(TreePlantation, pk=id)
@@ -159,3 +225,54 @@ class DonateCompleteView(LoginRequiredMixin, View):
         if not request.user.is_authenticated:
             return redirect('CustomUser:login')
         return super().dispatch(request, *args, **kwargs)
+
+class ReportGeneration(LoginRequiredMixin,View):
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('CustomUser:login')
+        return super().dispatch(request, *args, **kwargs)
+    
+    def get(self,request):
+        fields = ['complain_user__age', 'complain_user__address', 'latitude', 'longitude', 'image', 'description', 'date_of_complain', 'solved_date', 'validated_by__name']
+        user_complains = UserComplain.objects.filter(solved=True)
+        file_path =settings.BASE_DIR/"static/complain_data.csv"
+        with open(file_path,'w',newline='') as file:
+            writer=csv.DictWriter(file,fieldnames=fields)
+            writer.writeheader()
+            for complain in user_complains:
+                row = {
+                'complain_user__age': complain.complain_user.age,
+                'complain_user__address': complain.complain_user.address,
+                'latitude': complain.latitude,
+                'longitude': complain.longitude,
+                'image': complain.image.url if complain.image else None,
+                'description': complain.description,
+                'date_of_complain': complain.date_of_complain,
+                'solved_date': complain.solved_date,
+                'validated_by__name': complain.validated_by.name if complain.validated_by else None
+                }
+                writer.writerow(row)
+        with open(file_path, 'r') as file:
+            reader = csv.DictReader(file)
+            csv_data = list(reader)
+        context = {'csv_data': csv_data}
+        return render(request, 'CustomUser/report.html', context)
+    
+class DownloadCSV(LoginRequiredMixin,View):
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('CustomUser:login')
+        return super().dispatch(request, *args, **kwargs)
+    def get(self,request):
+        file_path =settings.BASE_DIR/"static/complain_data.csv"
+        file_exist=os.path.isfile(file_path)
+        if not file_exist:
+            return redirect("CustomUser:report")
+        else:
+            with open(file_path, 'r') as file:
+                csv_data = file.read()
+
+            response = HttpResponse(csv_data, content_type='text/csv')
+            response['Content-Disposition'] = 'attachment; filename="complain_data.csv"'
+
+            return response

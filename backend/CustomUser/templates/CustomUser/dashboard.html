@@ -1,0 +1,160 @@
+{% extends "CustomUser/base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12 col-md-6 mt-3 mb-2">
+            <div class="card" style="background-color:#defee2;">
+                <div class="card-content">
+                    <div class="card-body p-2">
+                        <div class="d-flex">
+                            <div class="align-self-center">
+                                <i class="icon-pencil primary font-large-2 float-left"></i>
+                            </div>
+                            <div class="text-right">
+                                <p>Admin Dashboard</p>
+                                <h4 class="text-uppercase">Welcome {{user.get_full_name}}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xl-3 col-sm-6 col-12 mb-2">
+            <div class="card h-100" style="background-color:#defee2;">
+                <div class="card-content">
+                    <div class="card-body p-2">
+                        <div class="d-flex justify-content-between">
+                            <div class="align-self-center">
+                                <i class='bx bx-user' style="font-size: 4rem;"></i>
+                            </div>
+                            <div class="text-right">
+                                <p>Total User</p>
+                                <span>{{userreg}}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-sm-6 col-12 mb-2">
+            <div class="card h-100" style="background-color:#defee2;">
+                <div class="card-content">
+                    <div class="card-body p-2">
+                        <div class="d-flex justify-content-between">
+                            <div class="align-self-center">
+                                <i class='bx bx-user-voice' style="font-size: 4rem;"></i>
+                            </div>
+                            <div class="text-right">
+                                <p>Complain</p>
+                                <span>Solved:{{complain_solved}} Unsolved:{{complain_unsolved}}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-sm-6 col-12 mb-2">
+            <div class="card h-100" style="background-color:#defee2;">
+                <div class="card-content">
+                    <div class="card-body p-2">
+                        <div class="d-flex justify-content-between">
+                            <div class="align-self-center">
+                                <i class='bx bx-calendar-event' style="font-size: 4rem;"></i>
+                            </div>
+                            <div class="text-right">
+                                <p>Event</p>
+                                <span>Previous:{{event_previous}} Upcoming:{{event_upcoming}}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-sm-6 col-12 mb-2">
+            <div class="card h-100" style="background-color:#defee2;">
+                <div class="card-content">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div class="align-self-center">
+                                <i class='bx bxs-tree' style="font-size: 4rem;"></i>
+                            </div>
+                            <div class="text-right">
+                                <p>Tree Planted</p>
+                                <span>Count:{{tree_count}}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <h3 class="mt-2">Menu</h3>
+    <div class="row">
+        <div class="col-xl-2 col-sm-4 col-md-3 mb-2">
+            <div class="text-center px-1 py-3" style="background-color:#defee2;">
+                <i class='bx bx-user' style="font-size: 4rem;"></i>
+                <a href="/admin">
+                    <p style="color:black;">Admin</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-xl-2 col-sm-4 col-md-3 mb-2">
+            <div class="text-center px-1 py-3" style="background-color:#defee2;">
+                <i class='bx bx-map-pin' style="font-size: 4rem;"></i>
+                <a href="{% url 'CustomUser:map_view' %}">
+                    <p style="color:black;">Map</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-xl-2 col-sm-4 col-md-3 mb-2">
+            <div class="text-center px-1 py-3" style="background-color:#defee2;">
+                <i class='bx bxs-tree' style="font-size: 4rem;"></i>
+                <a href="{% url 'CustomUser:tree_view' %}">
+                    <p style="color:black;">Tree Planted</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-xl-2 col-sm-4 col-md-3 mb-2">
+            <div class="text-center px-1 py-3" style="background-color:#defee2;">
+                <i class='bx bxs-calendar-event' style="font-size: 4rem;"></i>
+                <a href="{% url 'CustomUser:event_list' %}">
+                    <p style="color:black;">Event</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-xl-2 col-sm-4 col-md-3 mb-2">
+            <div class="text-center px-1 py-3" style="background-color:#defee2;">
+                <i class='bx bxs-donate-heart' style="font-size: 4rem;"></i>
+                <a href="{% url 'CustomUser:donate_list' %}">
+                    <p style="color:black;">Donation</p>
+                </div>
+            </a>
+        </div>
+    </div>
+    <div class="row my-3">
+        <div class="col-xl-6 col-sm-12 col-md-8">
+            <div class="card" style="background-color:#defee2;">
+                <div class="card-content">
+                    <div class="card-body">
+                        <div class="d-flex">
+                            <div class="align-self-center">
+                                <i class="icon-pencil primary font-large-2 float-left"></i>
+                            </div>
+                            <div class="text-right">
+                                <p>Generate report</p>
+                                <h4 class="text-uppercase">Creating Report from User Complains</h4>
+                            </div>
+                        </div>
+                        <div>
+                            <a href="{% url 'CustomUser:report' %}" class="text-dark">Create report</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

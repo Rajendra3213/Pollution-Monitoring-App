@@ -1,0 +1,40 @@
+{% extends "CustomUser/base.html" %}
+{% block title %}Event{% endblock %}
+{% block content %}
+<div class="container">
+  <p class="mt-4" style="margin-bottom:0;">Welcome To</p>
+  <h5 style="color: #5EBC67;">WasteWatch Nepal Events</h5>
+  {% if events %}
+  {% for e in events %}
+  <div class="card mb-3">
+    <div class="row">
+      <div class="col-md-6">
+        <img src="{{e.image.url}}" class="card-img-top" alt="{{e.title}}"/>
+      </div>
+      <div class="col-md-6">
+        <div class="card-body">
+          <h5 class="card-title">{{e.title}}</h5>
+          <p class="card-text">
+            {{e.description}}
+          </p>
+          <p class="card-text">
+            <small class="text-muted">Start Date:{{e.start_date}}</small>
+          </p>
+          <p class="card-text">
+            <small class="text-muted">End Date:{{e.end_date}}</small>
+          </p>
+          <p class="card-text">
+            <small class="text-muted">Location:{{e.location}}</small>
+          </p>
+          <p class="card-text">
+            <small class="text-muted">Sign up count:{{e.signed_users.count}}</small>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+  {% else %}
+  {% endif %}
+</div>
+{% endblock %}
