@@ -111,7 +111,7 @@ class MapView(LoginRequiredMixin,TemplateView):
 
         map.add_to(figure)
         
-        for complain in UserComplain.objects.all():
+        for complain in UserComplain.objects.filter(solved=False):
             make_markers_and_add_to_map(map, complain)
         
         figure.render()

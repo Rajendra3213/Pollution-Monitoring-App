@@ -44,6 +44,7 @@ class User(AbstractBaseUser,PermissionsMixin):
     last_name = models.CharField(max_length=150, blank=True)
     phone_number=models.CharField(validators=[phone_number_regex],max_length=14,blank=True)
     address=models.CharField(max_length=100,blank=True)
+    age=models.IntegerField(default=0)
     is_active=models.BooleanField(default=False)
     is_superuser=models.BooleanField(default=False)
     is_staff=models.BooleanField(default=False)

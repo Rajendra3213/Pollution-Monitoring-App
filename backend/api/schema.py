@@ -2,6 +2,7 @@ from pydantic import BaseModel,EmailStr,ValidationError,field_validator,Field,An
 from datetime import datetime
 from typing import List,Optional
 import re
+from enum import Enum
 
 class RegisterIn(BaseModel):
     email:EmailStr
@@ -10,6 +11,7 @@ class RegisterIn(BaseModel):
     last_name:str|None=None
     phone_number:str|None=None
     address:str|None=None
+    age:int
 
     @field_validator('password')
     def validate_password(cls,value):
@@ -31,19 +33,22 @@ class LoginIn(BaseModel):
 class RefreshIn(BaseModel):
     refresh:str
 
+class SeverityLevelEnum(str, Enum):
+    VERY_MINIMUM = 'very_minimum'
+    LOW = 'low'
+    HIGH = 'high'
+    VERY_HIGH = 'very_high'
 
 class UserComplainIn(BaseModel):
     longitude: float
     latitude: float
     description: str
+    severity_level: SeverityLevelEnum
 
 class UserComplainListOut(BaseModel):
     id: int
     longitude: float
     latitude: float
-
-    class Config:
-        orm_mode = True
 
 class UserLocationIn(BaseModel):
     longitude: float

@@ -13,7 +13,7 @@ import os
 from .schema import RefreshIn,LoginIn,RegisterIn,UserComplainIn,UserComplainListOut,UserLocationIn,EventOut,TreeOut
 from .auth import CustomHttpBearer,get_tokens_for_user
 from event.models import Event
-from complain.models import UserComplain
+from complain.models import UserComplain,ValidationAuthority
 from typing import List
 from django.db.models import Q
 from django.http import JsonResponse
@@ -26,13 +26,14 @@ router = Router()
 @router.post('register/')
 def registerUser(request,data:RegisterIn):
     if User.objects.filter(email=data.email).exists():
-        return {"message": "Email already exists"}
+        return NinjaAPI().create_response(request,{"detail":"Email already exists"},status=404)
     user = User.objects.create_user(email=data.email,
         password=data.password,
         first_name=data.first_name,
         last_name=data.last_name,
         phone_number=data.phone_number,
-        address=data.address)
+        address=data.address,
+        age=data.age)
     email_confim=EmailConfirm(user=user)
     email_confim.save()
     backend_link=os.environ.get('BACKEND_URL')
@@ -50,14 +51,14 @@ def registerUser(request,data:RegisterIn):
     )
     message.attach_alternative(html_message,'text/html')
     message.send()
-    return {"message": "User registered successfully"}
+    return {"detail": "User registered successfully,Check your email for verification"}
 
             
 @router.get('check/',auth=CustomHttpBearer())
 def check(request):
     if request.auth is None:
         return 401
-    return {"msg":"Token Valid"}
+    return {"detail":"Token Valid"}
 
 
 @router.post('login/')
@@ -70,7 +71,7 @@ def loginUser(request,logindata:LoginIn):
         return NinjaAPI().create_response(request,{"detail":"Email or password incorrect"},status=400)
     else:
         if user.is_active==False:
-            return NinjaAPI().create_response(request,{"detail":"User is inactive"},status=401)
+            return NinjaAPI().create_response(request,{"detail":"User is inactive Check your email!"},status=401)
         else:
             if user is not None:
                 return get_tokens_for_user(user)
@@ -91,18 +92,27 @@ def add_complain(request,data:UserComplainIn=Form(...),file:UploadedFile=File(..
     else:
         user_id=request.auth[1]['user_id']
         user=get_object_or_404(User,id=user_id)
+        lon_index=str(data.longitude).index('.')
+        lat_index=str(data.latitude).index('.')
+        rounded_longitude = float(str(data.longitude)[:lon_index+3])
+        rounded_latitude = float(str(data.latitude)[:lat_index+3])
+        validation=ValidationAuthority.objects.filter(
+        Q(longitude__startswith=rounded_longitude)|
+        Q(latitude__startswith=rounded_latitude)).first()
         user_complain=UserComplain.objects.create(
             longitude=data.longitude,
             latitude=data.latitude,
             complain_user=user,
             image=file,
-            description=data.description
+            description=data.description,
+            severity_level=data.severity_level,
+            validated_by=validation
         )
         user_complain.save()
         user_point, created = UserPoint.objects.get_or_create(user=user, defaults={'point': 0})
         user_point.point += 10
         user_point.save()
-        return  NinjaAPI().create_response(request,{"detail":"upload sucessful"},status=201)
+        return  NinjaAPI().create_response(request,{"detail":"Complain Sucessfully Added"},status=201)
 
 @router.post('complain/list',auth=CustomHttpBearer(),response=List[UserComplainListOut])
 def get_complain_list(request,data:UserLocationIn):
@@ -115,7 +125,8 @@ def get_complain_list(request,data:UserLocationIn):
         rounded_latitude = float(str(data.latitude)[:lat_index+3])
         usercomplains = UserComplain.objects.filter(
         Q(longitude__startswith=rounded_longitude)&
-        Q(latitude__startswith=rounded_latitude)
+        Q(latitude__startswith=rounded_latitude)&
+        Q(solved=False)
         )
         response_data = list(usercomplains.values("id", "longitude", "latitude"))
         return JsonResponse(response_data, safe=False)
@@ -129,7 +140,10 @@ def get_single_complain_data(request,id:int):
         return NinjaAPI().create_response(request,{
             "image":complain_data.image.url,
             "description":complain_data.description,
-            "date":complain_data.date_of_complain
+            "date":complain_data.date_of_complain,
+            "severity_level":complain_data.severity_level,
+            "validated_by":complain_data.validated_by.name,
+            "contact":complain_data.validated_by.contact
         },status=201)
 
 @router.get('event/all',auth=CustomHttpBearer(),response=List[EventOut])
@@ -198,6 +212,7 @@ def get_user_data(request):
             "last_name":user.last_name,
             "number":user.phone_number,
             "address":user.address,
+            "age":user.age,
             "point":point
             },status=202)
     
@@ -264,3 +279,22 @@ def get_predicted_severity(request,data:UserLocationIn):
     else:
         severity=make_severity(data.longitude,data.longitude)
         return {"severity":severity[0]}
+    
+@router.get('leaderboard/',auth=CustomHttpBearer())
+def get_leaderboard_list(request):
+    if request.auth is None:
+        return 401
+    else:
+        leaderboard_list=list()
+        user_points = UserPoint.objects.order_by('-point')
+        if len(user_points)==0:
+            return {}
+        else:
+            for up in user_points:
+                dict={
+                    "point":up.point,
+                    "name":up.user.get_full_name(),
+                    "tree_planted":TreePlantation.objects.filter(user=up.user).count()
+                }
+                leaderboard_list.append(dict)
+        return leaderboard_list
