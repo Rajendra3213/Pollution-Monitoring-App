@@ -257,7 +257,10 @@ def make_severity(latitude,longitude):
         severity_prediction = model.predict(data_to_predict)
         return severity_prediction
 
-@router.post('predict/')
+@router.post('predict/', auth=CustomHttpBearer())
 def get_predicted_severity(request,data:UserLocationIn):
-    severity=make_severity(data.longitude,data.longitude)
-    return {"severity":severity[0]}
+    if request.auth is None:
+        return 401
+    else:
+        severity=make_severity(data.longitude,data.longitude)
+        return {"severity":severity[0]}

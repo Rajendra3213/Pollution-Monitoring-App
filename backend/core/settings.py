@@ -200,8 +200,8 @@ EMAIL_PORT = '2525'
 #unfold
 BACKEND_URL=os.environ.get('BACKEND_URL')
 UNFOLD = {
-    "SITE_TITLE": "WasterWatch Nepal",
-    "SITE_HEADER": "WasterWatch Nepal",
+    "SITE_TITLE": "WasteWatch Nepal",
+    "SITE_HEADER": "WasteWatch Nepal",
     "SITE_URL": "/",
     "SHOW_HISTORY": False,
     "SITE_ICON": {
