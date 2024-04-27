@@ -52,6 +52,10 @@
       <span class="mx-2"><a href="{% url 'CustomUser:download' %}" {% if download %} class="text-decoration-underline"  {% endif %}>Download csv</a></span>
     </li>
     <li class="nav-link">
+      <i class='bx bxs-book-reader'></i>
+      <span class="mx-2"><a href="{% url 'CustomUser:profiling' %}">Analysis</a></span>
+    </li>
+    <li class="nav-link">
       <i class='bx bxs-log-out'></i>
       <span class="mx-2"><a href="{% url 'CustomUser:logout_user' %}" {% if download %} class="text-decoration-underline"  {% endif %}>logout</a></span>
     </li>

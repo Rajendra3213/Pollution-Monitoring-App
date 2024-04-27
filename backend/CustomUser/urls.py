@@ -14,5 +14,6 @@ urlpatterns = [
     path('event/list/',EventView.as_view(),name="event_list"),
     path('tree/view/',TreeMapView.as_view(),name="tree_view"),
     path('report/',ReportGeneration.as_view(),name="report"),
-    path('downloadcsv/',DownloadCSV.as_view(),name="download")
+    path('downloadcsv/',DownloadCSV.as_view(),name="download"),
+    path('profiling/',ProfilingData.as_view(),name="profiling")
 ]

@@ -18,6 +18,8 @@ from event.models import Event
 from django.utils import timezone
 import csv
 from django.conf import settings
+from ydata_profiling import ProfileReport
+import pandas as pd
 
 class Home(View):
     def get(self,request):
@@ -276,3 +278,22 @@ class DownloadCSV(LoginRequiredMixin,View):
             response['Content-Disposition'] = 'attachment; filename="complain_data.csv"'
 
             return response
+
+class ProfilingData(LoginRequiredMixin,View):
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('CustomUser:login')
+        return super().dispatch(request, *args, **kwargs)
+    def get(self,request):
+        file_path =settings.BASE_DIR/"static/complain_data.csv"
+        file_exist=os.path.isfile(file_path)
+        if not file_exist:
+            return redirect("CustomUser:report")
+        else:
+            data=pd.read_csv(file_path)
+            output_path=settings.BASE_DIR/"CustomUser/templates/CustomUser/output.html"
+            output_file_exist=os.path.isfile(output_path)
+            if not output_file_exist:
+                profile=ProfileReport(data,title="WasteWatch Nepal Report")
+                profile.to_file(output_file=output_path)
+            return render(request,'CustomUser/output.html')
