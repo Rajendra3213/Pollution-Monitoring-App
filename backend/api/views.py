@@ -98,7 +98,7 @@ def add_complain(request,data:UserComplainIn=Form(...),file:UploadedFile=File(..
         rounded_longitude = float(str(data.longitude)[:lon_index+3])
         rounded_latitude = float(str(data.latitude)[:lat_index+3])
         validation=ValidationAuthority.objects.filter(
-        Q(longitude__startswith=rounded_longitude)|
+        Q(longitude__startswith=rounded_longitude)&
         Q(latitude__startswith=rounded_latitude)).first()
         user_complain=UserComplain.objects.create(
             longitude=data.longitude,
@@ -138,7 +138,7 @@ def get_single_complain_data(request,id:int):
         return 401
     else:
         complain_data=get_object_or_404(UserComplain,id=id)
-        validated_by_name = complain_data.validated_by.name if complain_data.validated_by else "Not assigned"
+        validated_by_name = complain_data.validated_by.name if complain_data.validated_by else "Kathmandu Metropolitan City"
         validated_by_contact = complain_data.validated_by.contact if complain_data.validated_by else "014211705"
         return NinjaAPI().create_response(request,{
             "image":complain_data.image.url,
@@ -297,7 +297,7 @@ def get_leaderboard_list(request):
                 dict={
                     "point":up.point,
                     "name":up.user.get_full_name(),
-                    "tree_planted":TreePlantation.objects.filter(user=up.user).count()
+                    "tree_planted":TreePlantation.objects.filter(user=up.user,planted=True).count()
                 }
                 leaderboard_list.append(dict)
         return leaderboard_list

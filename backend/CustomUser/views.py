@@ -118,7 +118,7 @@ class EventView(LoginRequiredMixin,View):
         return render(request,'CustomUser/event.html',context={"event":True,"events":event})   
      
 def make_markers_and_add_to_map(map, complain):
-    backend_url=os.environ.get("BACKEND_URL")
+    backend_url=os.environ.get("PUBLIC_URL")
     html_code = render_to_string('CustomUser/popover.html',context={"c":complain,"b_url":backend_url})
     iframe = branca.element.IFrame(html=html_code,width="300px",height="400px")
     popup = folium.Popup(iframe,max_width="300px")
@@ -220,7 +220,7 @@ class DonateCompleteView(LoginRequiredMixin, View):
             )
             message.send()
             return redirect("CustomUser:donate_list")
-        return render(request, "CustomUser/make_donation.html", context={'form': donate_form})
+        return render(request, "CustomUser/make_donation.html", context={'form': donate_form,'id': id,"treedonation":True})
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return redirect('CustomUser:login')
