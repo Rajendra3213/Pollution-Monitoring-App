@@ -192,10 +192,18 @@ SIMPLE_JWT = {
 }
 
 #email
-EMAIL_HOST = 'sandbox.smtp.mailtrap.io'
-EMAIL_HOST_USER = '9b56662bd9bc00'
-EMAIL_HOST_PASSWORD = '2b8b2184d7cb60'
-EMAIL_PORT = '2525'
+# EMAIL_HOST = 'sandbox.smtp.mailtrap.io'
+# EMAIL_HOST_USER = '9b56662bd9bc00'
+# EMAIL_HOST_PASSWORD = '2b8b2184d7cb60'
+# EMAIL_PORT = '2525'
+
+#another mail
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'benup211@gmail.com'
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASSWORD')
+EMAIL_USE_TLS = True
 
 #unfold
 BACKEND_URL=os.environ.get('BACKEND_URL')

@@ -47,7 +47,7 @@ class EmailVerification(View):
             email_confim=EmailConfirm(user=user)
             email.delete()
             email_confim.save()
-            backend_link=os.environ.get('BACKEND_URL')
+            backend_link=os.environ.get('PUBLIC_URL')
             confirm_link=f'{backend_link}/confirm-mail/?token={email_confim.id}'
             context={
                 "link":confirm_link
@@ -57,7 +57,7 @@ class EmailVerification(View):
             message=EmailMultiAlternatives(
                 subject="WasteWatch Email Confirmation!!",
                 body=plain_message,
-                from_email=None,
+                from_email=settings.EMAIL_HOST_USER,
                 to=[user.email]
             )
             message.attach_alternative(html_message,'text/html')
@@ -215,7 +215,7 @@ class DonateCompleteView(LoginRequiredMixin, View):
             message = EmailMultiAlternatives(
             subject="WasteWatch Nepal Tree Sucessful Donation!",
             body=plain_message,
-            from_email=None,
+            from_email=settings.EMAIL_HOST_USER,
             to=[donation.user.email]
             )
             message.send()

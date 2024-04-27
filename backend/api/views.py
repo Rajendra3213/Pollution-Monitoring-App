@@ -36,7 +36,7 @@ def registerUser(request,data:RegisterIn):
         age=data.age)
     email_confim=EmailConfirm(user=user)
     email_confim.save()
-    backend_link=os.environ.get('BACKEND_URL')
+    backend_link=os.environ.get('PUBLIC_URL')
     confirm_link=f'{backend_link}/confirm-mail/?token={email_confim.id}'
     context={
         "link":confirm_link
@@ -46,7 +46,7 @@ def registerUser(request,data:RegisterIn):
     message=EmailMultiAlternatives(
         subject="WasteWatch Email Confirmation!!",
         body=plain_message,
-        from_email=None,
+        from_email=settings.EMAIL_HOST_USER,
         to=[user.email]
     )
     message.attach_alternative(html_message,'text/html')
@@ -191,7 +191,7 @@ def signup_event(request,id:int):
         message=EmailMultiAlternatives(
         subject="WasteWatch Nepal Event Signup!!",
         body=plain_message,
-        from_email=None,
+        from_email=settings.EMAIL_HOST_USER,
         to=[user.email]
     )
         message.send()
@@ -253,7 +253,7 @@ def donate_plant(request):
                 message = EmailMultiAlternatives(
                     subject="WasteWatch Nepal Tree Donation!",
                     body=plain_message,
-                    from_email=None,
+                    from_email=settings.EMAIL_HOST_USER,
                     to=[user.email]
                 )
                 message.send()
